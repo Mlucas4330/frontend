@@ -1,0 +1,29 @@
+For each piece of state below, decide which layer it belongs to — useState, useReducer, React Query, URL param, or Zustand — and justify in one sentence.
+
+6. Is a dropdown menu open?
+  UseSate, because it's a local state controlled by a button or the component.
+
+7. The list of products from GET /api/products
+  React Query, because it has automatic caching.
+
+8. The active filter shown in the URL (?category=shoes)
+  URL Param, for SEO.
+
+9. The currently logged-in user's name, used across all pages
+  useReducer alone isn't the right answer here. useReducer just manages how state changes - it doesn't solve the where to put it problem. You'd still need Context to share it across pages. The real options are:
+
+  Context + useReducer for simpler apps (no extra dependency) 
+  Zustand for apps where auth state is read in many places and you want to avoid re-renders from Context
+
+10. Whether a form submit button is disabled.
+  Also tricky. It depends on the business rule. UseSate if it's something local, reducer if some other page controls it and zustand if the rules is complex.
+
+11. A list of notifications polled every 30 seconds
+  React Query, because it has options to fetch that way.
+
+Then review: where would a bug appear if you chose the wrong layer?
+  Wrong layer → stale data. If you put the URL filter in useState instead of the URL, refreshing the page loses the filter. The user thinks they bookmarked a filtered view but they didn't.
+
+  Wrong layer → sync bugs. If you put server data in useState instead of React Query, two components fetching the same resource get two separate caches and can show different data on the same screen.
+
+  Wrong layer → unnecessary coupling. If you put dropdown open/closed in Zustand, now a global store knows about a local UI detail. Every component re-renders when that dropdown toggles.

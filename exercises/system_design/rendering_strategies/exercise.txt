@@ -1,0 +1,24 @@
+For each page below, choose a strategy (CSR / SSR / SSG / ISR) and explain why in one sentence:
+
+    15. A marketing landing page that rarely changes
+    SSG
+    16. A user dashboard showing real-time account balance
+    CSR
+    17. A blog with 500 posts, updated a few times per week
+    ISR
+    18. A product page where price updates every few minutes
+    SSR
+    19. An admin panel only accessible after login
+    CSR
+
+Bonus: explain the trade-off between SSG+ISR vs full SSR for the blog case.
+
+SSG + ISR allow the website to show a faster version of the app, with the possibility of creating a CDN to make the user access faster depending on their location. After knowing the content changes only a few times per week, new content could be added with ISR. Altough for SSR we have caching, after the cache ttl the content must be requested again.
+
+Correction: 
+
+On the bonus — you got the core idea right, but let me sharpen it:
+The real trade-off is latency vs infrastructure cost.
+SSG+ISR serves pre-built HTML from a CDN, so response time is ~50ms anywhere in the world. The downside is stale content — a reader might see an article for up to N seconds/minutes after it was updated, depending on your revalidation window.
+SSR always serves fresh content but every request hits your server, response time is ~200-500ms, and under high traffic you pay for that compute. Caching helps, but you're right that once the TTL expires every request is a full server render again.
+For a blog updated a few times per week, the staleness window of ISR is completely acceptable. SSR would be overkill — you'd be paying for real-time freshness on content that doesn't change in real-time.

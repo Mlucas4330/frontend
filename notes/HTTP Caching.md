@@ -126,3 +126,38 @@ module.exports = {
 - Not sending ETag or Last-Modified when using no-cache
 - Caching API responses with user-specific data using public instead of private
 - Relying on browser defaults instead of setting explicit Cache-Control headers
+
+### HTTP caching vs Redis caching
+
+They operate at completely different layers and solve different problems. They complement each other — you will often use both.
+
+**HTTP caching** lives between the client and the server. The browser, CDN, or reverse proxy stores a full HTTP response. No server code runs at all on a cache hit. It is stateless, automatic, and controlled purely through response headers.
+
+**Redis caching** lives inside the server. It stores arbitrary data (query results, computed values, session state) in memory so that slow operations — database queries, third-party API calls, heavy computations — are not repeated on every request. The server still runs, receives the request, checks Redis, and returns the result.
+
+| | HTTP caching | Redis caching |
+|---|---|---|
+| Where | Client / CDN / proxy | Server-side, in-memory store |
+| What it avoids | Network round trip entirely | Slow internal operations (DB, API) |
+| Who controls it | Response headers sent by the server | Application code |
+| Granularity | Full HTTP responses | Any key-value data you choose |
+| Invalidation | TTL, ETag revalidation, cache-busting URLs | Explicit key deletion or TTL expiry |
+| Shared across users | Yes (with `public`) | Yes, by design |
+| Per-user data | Only with `private` directive | Easily, just namespace the key |
+
+**How they layer together**
+
+```
+Browser → (HTTP cache: serves stale asset, skip) → CDN → (HTTP cache: serves response, skip) → Server → (Redis: return cached DB result, skip) → Database
+```
+
+A request for a static JS file never reaches the server because the CDN handles it via HTTP cache. A request for an API response might reach the server but return in microseconds because Redis has the query result. Only a cache miss at both layers hits the database.
+
+**When to use which**
+
+- HTTP cache: public assets (JS, CSS, images), HTML pages, public API responses that are safe to share across users
+- Redis: database query results, session tokens, rate limit counters, expensive computations, per-user data that must not leak between clients
+
+**Key insight**
+
+HTTP caching cannot help with dynamic, per-user, or private data because caching a response with `private` means only the individual browser stores it — the CDN and server still take the hit for every other user. Redis fills that gap by caching at the server level where you have full control over what gets shared and what stays isolated.

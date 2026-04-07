@@ -118,3 +118,30 @@ const fullName = `${firstName} ${lastName}`
 - Forgetting to add a dependency to the array, causing stale values
 - Passing new object or array literals as props to React.memo components (breaks memoization)
 - Using useCallback on functions that are not passed to memoized children (has no effect)
+
+
+**React.memo + useCallback**
+
+`React.memo` prevents a child from re-rendering when the parent re-renders, as long as the props didn't change.
+
+The problem is that functions are objects in JavaScript — every render creates a new reference, so `React.memo` always sees a "new" function prop and re-renders anyway.
+
+`useCallback` fixes that by returning the same function reference across renders.
+
+They only make sense together when a function is passed as a prop:
+
+```tsx
+// Parent
+const handleClick = useCallback(() => alert('Oi'), []);
+return <SimpleButton onClick={handleClick} />;
+
+// Child
+const SimpleButton = React.memo(({ onClick, label }) => (
+  <button onClick={onClick}>{label}</button>
+));
+```
+
+**The rule:**
+- Child re-rendering unnecessarily → `React.memo`
+- Passing a function as prop to a memoized child → `useCallback`
+- One without the other is usually pointless

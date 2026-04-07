@@ -1,5 +1,0 @@
-You're architecting an e-commerce platform split into three micro frontends: Catalog, Cart, and UserProfile. A shell app owns layout and navigation.
-
-    20. The Cart badge in the shell header needs to show the item count, but the Cart MFE owns that data. How do you communicate it without coupling them?
-    21. All three MFEs share the same design system. How do you avoid shipping three copies of it to the user?
-    22. If the Cart MFE fails to load, what should the user experience be and how do you implement it?
